@@ -1,5 +1,4 @@
-const bcrypt = require('bcrypt');
-const User = require('../models/user');
+const UserService = require('../services/user_services');
 
 class AdminController {
 	static showLoginPage(request, response, next) {
@@ -12,12 +11,7 @@ class AdminController {
 
 	static async postToRegisterPage(request, response, next) {
 		try {
-			const hashedPassword = await bcrypt.hash(request.body.password, 10);
-			let user = await User.create({
-				name: request.body.name,
-				email: request.body.email,
-				password: hashedPassword
-			});
+			const user = UserService.registerUser(request);
 
 			response.redirect('/login');
 		} catch (error) {
@@ -25,7 +19,10 @@ class AdminController {
 		}
 	}
 
-	static postToLoginPage(request, response, next) {}
+	static postToLoginPage(request, response, next) {
+		const user = UserService.loginUser(request);
+		request.user = user;
+	}
 }
 
 module.exports = AdminController;
