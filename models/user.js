@@ -11,11 +11,24 @@ const User = sequelize.define('user', {
 	},
 	name: {
 		type: Sequelize.STRING,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			len: {
+				args: [4, 15],
+				msg: 'name must be between 4 and 15 characters'
+			}
+		}
 	},
 	email: {
 		type: Sequelize.STRING,
-		allowNull: false
+		allowNull: false,
+		unique: true,
+		validate: {
+			isEmail: {
+				args: true,
+				msg: 'Please enter a valid email address'
+			}
+		}
 	},
 	password: {
 		type: Sequelize.STRING,
