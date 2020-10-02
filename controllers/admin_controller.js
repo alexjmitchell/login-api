@@ -26,8 +26,7 @@ class AdminController {
 
 	static async postToLoginPage(request, response, next) {
 		try {
-			const user = await UserService.loginUser(request, response);
-			request.user = user;
+			await UserService.loginUser(request, response);
 		} catch (err) {
 			throw err;
 		}

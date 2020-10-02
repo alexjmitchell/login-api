@@ -3,21 +3,22 @@ const ErrorController = require('../controllers/error_controller');
 const UserErrorController = require('../controllers/userError_controller');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const validator = require('validator');
 
+/**
+ *
+ * @class UserService
+ *
+ * This is a class for doing CRUD calls for user controller.
+ */
 class UserService {
-	static async getUserByEmail(email) {
-		try {
-			const user = await User.findAll({ where: { email: email } });
-			if (user) {
-				return user[0].dataValues;
-			} else {
-				return null;
-			}
-		} catch (error) {
-			throw error;
-		}
-	}
+	/**
+	 * This is a function.
+	 * @function registerUser
+	 * @param {Object} request - express request object
+	 * @typedef {{name: string, email: string, password: string}} userObject
+	 * @param {Object} response - express response object
+	 * @return {userObject} - A specified opject with user's name, email, and hashed password.
+	 */
 
 	static async registerUser(request, response) {
 		try {
@@ -33,7 +34,10 @@ class UserService {
 				return null;
 			}
 
-			const hashedPassword = await bcrypt.hash(password.trim(), 10);
+			const hashedPassword = await bcrypt.hash(
+				password.trim() + process.env.SALT,
+				10
+			);
 			const user = await User.create({
 				name: name.trim().toLowerCase(),
 				email: email.trim().toLowerCase(),
@@ -54,14 +58,18 @@ class UserService {
 
 	static async loginUser(request, response) {
 		const { email, password } = request.body;
+
 		try {
 			if (email && password) {
 				const user = await User.findOne({
 					where: { email: email.toLowerCase() }
 				});
-				console.log('user =========>>>>', user);
+				
 				const confirmedPassword = user
-					? await bcrypt.compare(password, user.password)
+					? await bcrypt.compare(
+							password.trim() + process.env.SALT,
+							user.password
+					  )
 					: '';
 
 				if (user && confirmedPassword) {
@@ -69,7 +77,9 @@ class UserService {
 						{ user: user },
 						process.env.TOKEN_SECRET
 					);
-					await response
+					// response.setHeader('Set-Cookie', `accessToken=${accessToken}`)
+					response.cookie('accessToken', accessToken);
+					response
 						.status(200)
 						.json({ message: `logged in, ${user.name}`, accessToken });
 					return user;

@@ -4,37 +4,28 @@ if (process.env.NODE_ENV !== 'production') {
 
 const express = require('express');
 const app = express();
-const flash = require('express-flash');
-const session = require('express-session');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const sequelize = require('./database/connection');
 const staticRoute = require('./routes/static');
 const adminRoute = require('./routes/admin');
-const UserService = require('./services/user_services');
-const User = require('./models/user');
-
-app.set('view engine', 'ejs');
 
 app.use(bodyParser.json());
-
-// app.use(flash());
-// app.use(
-// 	session({
-// 		secret: process.env.SESSION_SECRET,
-// 		resave: false,
-// 		saveUninitialized: false
-// 	})
-// );
+app.use(cookieParser());
 
 app.use(adminRoute);
 app.use(staticRoute);
 
-sequelize
-	.sync()
-	.then(() => {
-		app.listen(3000);
-	})
-	.catch((error) => {
-		console.log(error);
-	});
+const serverStart = async () => {
+	try {
+		await sequelize.sync();
+		app.listen(process.env.PORT, () => {
+			console.log('listening on port ===========<<<>>>>>', process.env.PORT);
+		});
+	} catch (error) {
+		console.log('server error ===========>>>>>>', error);
+	}
+};
+
+serverStart();

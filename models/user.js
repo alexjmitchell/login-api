@@ -22,7 +22,10 @@ const User = sequelize.define('user', {
 	email: {
 		type: Sequelize.STRING,
 		allowNull: false,
-		unique: true,
+		unique: {
+			args: true,
+			msg: 'That email is already registered. Please use a unique email.'
+		},
 		validate: {
 			isEmail: {
 				args: true,
