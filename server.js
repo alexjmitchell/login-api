@@ -7,12 +7,15 @@ const app = express();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
+
+
 const sequelize = require('./database/connection');
 const staticRoute = require('./routes/static');
 const adminRoute = require('./routes/admin');
 
 app.use(bodyParser.json());
 app.use(cookieParser());
+
 
 app.use(adminRoute);
 app.use(staticRoute);

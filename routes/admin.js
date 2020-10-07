@@ -11,4 +11,6 @@ router.post('/register', AdminController.postToRegisterPage);
 
 router.post('/login', AdminController.postToLoginPage);
 
+router.get('/loggedin?', AdminController.isUserLoggedIn);
+
 module.exports = router;

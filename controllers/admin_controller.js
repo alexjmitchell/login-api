@@ -31,6 +31,24 @@ class AdminController {
 			throw err;
 		}
 	}
+
+	static isUserLoggedIn(request, response, next) {
+		try {
+			const cookies = request.cookies;
+			const accessToken = cookies.accessToken;
+
+			jwt.verify(accessToken, process.env.TOKEN_SECRET);
+
+			const decodedToken = jwt.decode(accessToken);
+
+			const user = decodedToken.user;
+
+			response.json({ accessToken, user, loggedIn: true });
+			
+		} catch (error) {
+			response.status(400).json({ loggedIn: false, error: error });
+		}
+	}
 }
 
 module.exports = AdminController;

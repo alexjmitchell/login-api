@@ -5,7 +5,7 @@ class StaticController {
 		try {
 			response.json({ message: 'hello world' });
 		} catch (error) {
-			throw error;
+			console.log(error);
 		}
 	}
 }
