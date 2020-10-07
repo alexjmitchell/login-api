@@ -31,12 +31,25 @@ module.exports.authenticateToken = (request, response, next) => {
 
 			const user = decodedToken.user;
 
-			response.json({ accessToken, user, loggedIn: true });
+			// response.json({ accessToken, user, loggedIn: true });
+			request.status = 200;
+			request.loggedIn = true;
+			request.user = user;
 
 			next();
+		} else {
+			// response.status(400).json({ loggedIn: false });
+			request.loggedIn = false;
+			request.user = null;
+			request.status = 400;
+			return;
 		}
 	} catch (error) {
-		response.status(400).json({ loggedIn: false, error: error });
+		// response.status(400).json({ loggedIn: false, error: error });
+		request.loggedIn = false;
+		request.user = null;
+		request.status = 400;
+		request.error = error;
 		next();
 	}
 };
