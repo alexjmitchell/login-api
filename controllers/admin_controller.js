@@ -52,9 +52,11 @@ class AdminController {
 		}
 	}
 
-	static logout(request, response, next) {
+	static logout(request, response, next, calledByPath = true) {
 		response.cookie('accessToken', '', { maxAge: 1 });
-		response.json({ message: 'logged out' });
+		if (calledByPath) {
+			response.json({ message: 'logged out' });
+		}
 	}
 
 	static async update(request, response, next) {
@@ -92,6 +94,24 @@ class AdminController {
 			response.status(400).json({
 				error: error,
 				message: 'failed to update user'
+			});
+		}
+	}
+
+	static async delete(request, response, next) {
+		const user = request.user;
+
+		const result = await UserService.deleteUserById(user.id);
+
+		if (result.userDeleted) {
+			response.cookie('accessToken', '', { maxAge: 1 });
+			response.status(200).json({
+				message: 'User was deleted'
+			});
+		} else {
+			response.status(400).json({
+				message: 'User was not deleted',
+				error: result.error
 			});
 		}
 	}
