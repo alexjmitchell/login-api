@@ -4,7 +4,6 @@ const UserErrorController = require('../controllers/userError_controller');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { createToken } = require('../utils/jsonwebtoken');
-const { response } = require('express');
 
 /**
  *
@@ -138,7 +137,6 @@ class UserService {
 				10
 			);
 
-
 			updatedUser = await currentUser.update({
 				name: name ? name : currentUser.name,
 				email: email ? email : currentUser.email,
@@ -148,6 +146,21 @@ class UserService {
 			return updatedUser;
 		} catch (error) {
 			console.log(error);
+		}
+	}
+
+	static async deleteUserById(userId) {
+		try {
+			const deletedUser = await User.destroy({ where: { id: userId } });
+
+			return {
+				userDeleted: true
+			};
+		} catch (error) {
+			return {
+				userDeleted: false,
+				error: error
+			};
 		}
 	}
 }

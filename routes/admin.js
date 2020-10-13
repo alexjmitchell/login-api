@@ -18,4 +18,6 @@ router.get('/logout', AdminController.logout);
 
 router.patch('/editUser', authenticateToken, AdminController.update);
 
+router.delete('/deleteUser', authenticateToken, AdminController.delete);
+
 module.exports = router;
