@@ -4,6 +4,7 @@ const UserErrorController = require('../controllers/userError_controller');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { createToken } = require('../utils/jsonwebtoken');
+const { response } = require('express');
 
 /**
  *
@@ -89,7 +90,7 @@ class UserService {
 					const accessToken = createToken(
 						{ user: { id: user.id, name: user.name, email: user.email } },
 						process.env.TOKEN_SECRET,
-						10
+						maxAge
 					);
 
 					response.cookie('accessToken', accessToken, {
@@ -114,6 +115,39 @@ class UserService {
 			}
 		} catch (error) {
 			throw error;
+		}
+	}
+
+	static async updateUser(user, email, password, name) {
+		const currentUser = await User.findOne({ where: { id: user.id } });
+		let updatedUser = null;
+
+		try {
+			if ((password && password.length < 8) || password.length > 50) {
+				ErrorController.customHandler(
+					response,
+					401,
+					'Password needs to be between 8 and 15 characters'
+				);
+
+				return null;
+			}
+
+			const hashedPassword = await bcrypt.hash(
+				password.trim() + process.env.SALT,
+				10
+			);
+
+
+			updatedUser = await currentUser.update({
+				name: name ? name : currentUser.name,
+				email: email ? email : currentUser.email,
+				password: password ? hashedPassword : currentUser.password
+			});
+
+			return updatedUser;
+		} catch (error) {
+			console.log(error);
 		}
 	}
 }

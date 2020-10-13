@@ -1,5 +1,6 @@
 const UserService = require('../services/user_services');
 const jwt = require('jsonwebtoken');
+const { compareSync } = require('bcrypt');
 
 class AdminController {
 	static showLoginPage(request, response, next) {
@@ -20,7 +21,9 @@ class AdminController {
 					.json({ message: 'you have been registered', user: user });
 			}
 		} catch (error) {
-			response.status(500).json({ message: 'something went wrong' });
+			response
+				.status(500)
+				.json({ message: 'something went wrong', error: error });
 		}
 	}
 
@@ -44,9 +47,52 @@ class AdminController {
 			const user = decodedToken.user;
 
 			response.json({ accessToken, user, loggedIn: true });
-			
 		} catch (error) {
 			response.status(400).json({ loggedIn: false, error: error });
+		}
+	}
+
+	static logout(request, response, next) {
+		response.cookie('accessToken', '', { maxAge: 1 });
+		response.json({ message: 'logged out' });
+	}
+
+	static async update(request, response, next) {
+		const user = request.user;
+		console.log('user ======<<<<<<<', user);
+		const { email, password, name } = request.body;
+		console.log('users email, pass, and name =======<<>>><><><', [
+			email,
+			password,
+			name
+		]);
+		try {
+			const updatedUser = await UserService.updateUser(
+				user,
+				email,
+				password,
+				name
+			);
+
+			console.log('updated user ==========>>>>', updatedUser);
+			if (updatedUser && updatedUser != 'fail') {
+				response.status(201).json({
+					message: 'User has been updated',
+					user: updatedUser
+				});
+
+				request.user = updatedUser;
+			} else {
+				response.status(400).json({
+					error: updatedUser,
+					message: 'failed to update user'
+				});
+			}
+		} catch (error) {
+			response.status(400).json({
+				error: error,
+				message: 'failed to update user'
+			});
 		}
 	}
 }

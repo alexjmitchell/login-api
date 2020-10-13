@@ -4,7 +4,9 @@ class StaticController {
 	static async home(request, response, next) {
 		try {
 			if (request.loggedIn) {
-				response.status(request.status).json({ message: 'hello world' });
+				response
+					.status(request.status)
+					.json({ message: 'hello world', currentUser: request.user });
 			} else {
 				response
 					.status(request.status)
