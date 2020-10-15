@@ -15,24 +15,44 @@ class UserService {
 	/**
 	 * This is a function.
 	 * @function registerUser
-	 * @param {Object} request - express request object
-	 * @typedef {{name: string, email: string, password: string}} userObject
-	 * @param {Object} response - express response object
-	 * @return {userObject} - A specified opject with user's name, email, and hashed password.
+	 * @param {String} email - Expects a properly formated email address.
+	 * @param {String} password - Expects a password string of eight or more characters
+	 * @param {String} name - Expects a name string of four or more characters
+	 * @return {Object} - An object that contains the user, a status, and any errors
 	 */
 
-	static async registerUser(request, response) {
+	static async registerUser(email, password, name) {
 		try {
-			const { email, name, password } = request.body;
+			if (!email) {
+				return {
+					user: null,
+					status: 404,
+					error: 'Email is required !!!'
+				};
+			}
+
+			if (!password) {
+				return {
+					user: null,
+					status: 404,
+					error: 'Password is required !!!'
+				};
+			}
+
+			if (!name) {
+				return {
+					user: null,
+					status: 404,
+					error: 'Name is required !!!'
+				};
+			}
 
 			if (password.length < 8 || password.length > 50) {
-				ErrorController.customHandler(
-					response,
-					401,
-					'Password needs to be between 8 and 15 characters'
-				);
-
-				return null;
+				return {
+					user: null,
+					status: 401,
+					error: 'Password needs to be between 8 and 15 characters'
+				};
 			}
 
 			const hashedPassword = await bcrypt.hash(
@@ -46,20 +66,28 @@ class UserService {
 			});
 
 			if (user) {
-				return user;
+				return {
+					user: user,
+					status: 200,
+					error: {}
+				};
 			} else {
-				return null;
+				return {
+					user: null,
+					status: 404,
+					error: 'User not registered, please try again'
+				};
 			}
 		} catch (error) {
-			response.status(401).json({
+			return {
+				user: null,
+				status: 401,
 				error: UserErrorController.userRegistrationHandler(error)
-			});
+			};
 		}
 	}
 
-	static async loginUser(request, response) {
-		const { email, password } = request.body;
-
+	static async loginUser(email, password) {
 		try {
 			if (email && password) {
 				const user = await User.findOne({
@@ -67,8 +95,11 @@ class UserService {
 				});
 
 				if (!user) {
-					response.json({ error: 'Email is incorrect' });
-					return null;
+					return {
+						user: null,
+						status: 400,
+						error: 'Email is incorrect'
+					};
 				}
 
 				const confirmedPassword = user
@@ -79,8 +110,11 @@ class UserService {
 					: '';
 
 				if (!confirmedPassword) {
-					response.json({ error: 'Password is Incorrect' });
-					return null;
+					return {
+						user: null,
+						status: 400,
+						error: 'Password is Incorrect'
+					};
 				}
 
 				if (user && confirmedPassword) {
@@ -92,28 +126,33 @@ class UserService {
 						maxAge
 					);
 
-					response.cookie('accessToken', accessToken, {
-						maxAge: 1000 * maxAge,
-						httpOnly: true
-					});
-
-					response.status(200).json({ message: `logged in, ${user.name}` });
-					return user;
+					return {
+						user: user,
+						status: 200,
+						error: {},
+						maxAge: maxAge,
+						tokens: [accessToken]
+					};
 				} else {
-					ErrorController.customHandler(response, 401, 'failed to login user');
-					return null;
+					return {
+						user: null,
+						status: 401,
+						error: 'failed to login user'
+					};
 				}
 			} else {
-				ErrorController.customHandler(
-					response,
-					404,
-					'missing parameters for password or email'
-				);
-
-				return null;
+				return {
+					user: null,
+					status: 404,
+					error: 'missing parameters for password or email'
+				};
 			}
 		} catch (error) {
-			throw error;
+			return {
+				user: null,
+				status: 404,
+				error: error
+			};
 		}
 	}
 
