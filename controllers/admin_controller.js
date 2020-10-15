@@ -1,6 +1,6 @@
 const UserService = require('../services/user_services');
 const jwt = require('jsonwebtoken');
-const { compareSync } = require('bcrypt');
+
 
 class AdminController {
 	static showLoginPage(request, response, next) {
