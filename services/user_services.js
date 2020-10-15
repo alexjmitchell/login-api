@@ -18,142 +18,141 @@ class UserService {
 	 * @param {String} email - Expects a properly formated email address.
 	 * @param {String} password - Expects a password string of eight or more characters
 	 * @param {String} name - Expects a name string of four or more characters
-	 * @return {Object} - An object that contains the user, a status, and any errors
+	 * @return {JSON} - An object that contains the user, a status, and any errors
 	 */
-
 	static async registerUser(email, password, name) {
+		if (!email) {
+			return {
+				user: null,
+				status: 422,
+				error: 'Email is required !!!'
+			};
+		}
+
+		if (!password) {
+			return {
+				user: null,
+				status: 422,
+				error: 'Password is required !!!'
+			};
+		}
+
+		if (!name) {
+			return {
+				user: null,
+				status: 422,
+				error: 'Name is required !!!'
+			};
+		}
+
+		if (password.length < 8 || password.length > 50) {
+			return {
+				user: null,
+				status: 422,
+				error: 'Password needs to be between 8 and 15 characters'
+			};
+		}
+
+		const hashedPassword = await bcrypt.hash(
+			password.trim() + process.env.SALT,
+			10
+		);
+		let user = null;
 		try {
-			if (!email) {
-				return {
-					user: null,
-					status: 404,
-					error: 'Email is required !!!'
-				};
-			}
-
-			if (!password) {
-				return {
-					user: null,
-					status: 404,
-					error: 'Password is required !!!'
-				};
-			}
-
-			if (!name) {
-				return {
-					user: null,
-					status: 404,
-					error: 'Name is required !!!'
-				};
-			}
-
-			if (password.length < 8 || password.length > 50) {
-				return {
-					user: null,
-					status: 401,
-					error: 'Password needs to be between 8 and 15 characters'
-				};
-			}
-
-			const hashedPassword = await bcrypt.hash(
-				password.trim() + process.env.SALT,
-				10
-			);
-			const user = await User.create({
+			user = await User.create({
 				name: name.trim().toLowerCase(),
 				email: email.trim().toLowerCase(),
 				password: hashedPassword
 			});
-
-			if (user) {
-				return {
-					user: user,
-					status: 200,
-					error: {}
-				};
-			} else {
-				return {
-					user: null,
-					status: 404,
-					error: 'User not registered, please try again'
-				};
-			}
 		} catch (error) {
 			return {
 				user: null,
-				status: 401,
+				status: 500,
 				error: UserErrorController.userRegistrationHandler(error)
 			};
 		}
+
+		if (!user) {
+			return {
+				user: null,
+				status: 500,
+				error: 'User not registered, please try again'
+			};
+		}
+
+		return {
+			user: {
+				id: user.id,
+				email: user.email,
+				name: user.name
+			},
+			status: 200,
+			error: {}
+		};
 	}
 
 	static async loginUser(email, password) {
-		try {
-			if (email && password) {
-				const user = await User.findOne({
-					where: { email: email.toLowerCase() }
-				});
-
-				if (!user) {
-					return {
-						user: null,
-						status: 400,
-						error: 'Email is incorrect'
-					};
-				}
-
-				const confirmedPassword = user
-					? await bcrypt.compare(
-							password.trim() + process.env.SALT,
-							user.password
-					  )
-					: '';
-
-				if (!confirmedPassword) {
-					return {
-						user: null,
-						status: 400,
-						error: 'Password is Incorrect'
-					};
-				}
-
-				if (user && confirmedPassword) {
-					const maxAge = 60 * 60 * 3;
-
-					const accessToken = createToken(
-						{ user: { id: user.id, name: user.name, email: user.email } },
-						process.env.TOKEN_SECRET,
-						maxAge
-					);
-
-					return {
-						user: user,
-						status: 200,
-						error: {},
-						maxAge: maxAge,
-						tokens: [accessToken]
-					};
-				} else {
-					return {
-						user: null,
-						status: 401,
-						error: 'failed to login user'
-					};
-				}
-			} else {
-				return {
-					user: null,
-					status: 404,
-					error: 'missing parameters for password or email'
-				};
-			}
-		} catch (error) {
+		if (!email || !password) {
 			return {
 				user: null,
 				status: 404,
-				error: error
+				error: 'Request must include ( email, password )'
 			};
 		}
+
+		let user = null;
+		try {
+			user = await User.findOne({
+				where: { email: email.toLowerCase() }
+			});
+		} catch (err) {
+			return {
+				status: 500,
+				message: 'Error quering for User with provided params',
+				error: err
+			};
+		}
+
+		if (!user) {
+			return {
+				user: null,
+				status: 404,
+				error: 'User not found.'
+			};
+		}
+
+		const confirmedPassword = user
+			? await bcrypt.compare(password.trim() + process.env.SALT, user.password)
+			: null;
+
+		if (!confirmedPassword) {
+			return {
+				user: null,
+				status: 401,
+				error: 'Bad credentials'
+			};
+		}
+
+		// Good math skillz ( WTF length of time is this? FYI: 86400 Seconds in a DAY )
+		const maxAge = 60 * 60 * 3;
+
+		const accessToken = createToken(
+			{ user: { id: user.id, name: user.name, email: user.email } },
+			process.env.TOKEN_SECRET,
+			maxAge
+		);
+
+		return {
+			user: {
+				id: user.id,
+				email: user.email,
+				name: user.name
+			},
+			status: 200,
+			error: {},
+			maxAge: maxAge,
+			tokens: [accessToken]
+		};
 	}
 
 	static async updateUser(user, email, password, name) {
