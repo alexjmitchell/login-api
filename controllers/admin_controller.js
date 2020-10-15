@@ -1,7 +1,6 @@
 const UserService = require('../services/user_services');
 const jwt = require('jsonwebtoken');
 
-
 class AdminController {
 	static showLoginPage(request, response, next) {
 		response.json({ message: 'login page' });
@@ -13,25 +12,48 @@ class AdminController {
 
 	static async postToRegisterPage(request, response, next) {
 		try {
-			const user = await UserService.registerUser(request, response);
+			const { email, password, name } = request.body;
+			const result = await UserService.registerUser(email, password, name);
 
-			if (user) {
+			if (result.user && result.user != null) {
 				response
-					.status(201)
-					.json({ message: 'you have been registered', user: user });
+					.status(result.status)
+					.json({ message: 'you have been registered', user: result.user });
+			} else {
+				response.status(result.status).json({ error: result.error });
 			}
 		} catch (error) {
-			response
-				.status(500)
-				.json({ message: 'something went wrong', error: error });
+			response.status(result.status).json({ error: result.error });
 		}
 	}
 
 	static async postToLoginPage(request, response, next) {
 		try {
-			await UserService.loginUser(request, response);
+			const { email, password } = request.body;
+			const result = await UserService.loginUser(email, password);
+
+			if (result.user && result.user != null) {
+				const user = result.user;
+
+				response.cookie('accessToken', result.tokens[0], {
+					maxAge: 1000 * result.maxAge,
+					httpOnly: true
+				});
+
+				response.status(result.status).json({
+					message: `${user.name} has been logged in`,
+					user: user,
+					error: result.error
+				});
+			} else {
+				response.status(result.status).json({
+					error: result.error
+				});
+			}
 		} catch (err) {
-			throw err;
+			response.status(500).json({
+				error: err
+			});
 		}
 	}
 
