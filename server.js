@@ -33,15 +33,17 @@ app.use(staticRoute);
 
 app.use(errorController.page_404);
 
-const serverStart = async () => {
-	try {
-		await sequelize.sync();
-		app.listen(process.env.PORT, () => {
-			console.log('listening on port ===========<<<>>>>>', process.env.PORT);
-		});
-	} catch (error) {
-		console.log('server error ===========>>>>>>', error);
-	}
-};
+// const serverStart = async () => {
+// 	try {
+// 		await sequelize.sync();
+// 		app.listen(process.env.PORT, () => {
+// 			console.log('listening on port ===========<<<>>>>>', process.env.PORT);
+// 		});
+// 	} catch (error) {
+// 		console.log('server error ===========>>>>>>', error);
+// 	}
+// };
 
-serverStart();
+// serverStart();
+
+app.listen(process.env.PORT);

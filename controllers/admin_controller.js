@@ -2,19 +2,11 @@ const UserService = require('../services/user_services');
 const jwt = require('jsonwebtoken');
 
 class AdminController {
-	static showLoginPage(request, response, next) {
-		response.json({ message: 'login page' });
-	}
-
-	static showRegisterPage(request, response, next) {
-		response.json({ message: 'registration page' });
-	}
-
-	static async postToRegisterPage(request, response, next) {
+	static async registerNewUser(request, response, next) {
 		try {
 			const { email, password, name } = request.body;
 			const result = await UserService.registerUser(email, password, name);
-
+			console.log('result -------->>>>>', result);
 			if (result.user && result.user != null) {
 				response
 					.status(result.status)
@@ -27,7 +19,7 @@ class AdminController {
 		}
 	}
 
-	static async postToLoginPage(request, response, next) {
+	static async loginExistingUser(request, response, next) {
 		try {
 			const { email, password } = request.body;
 			const result = await UserService.loginUser(email, password);
@@ -66,7 +58,7 @@ class AdminController {
 
 			const decodedToken = jwt.decode(accessToken);
 
-			const user = decodedToken.user;
+			const user = decodedToken.user || user;
 
 			response.json({ accessToken, user, loggedIn: true });
 		} catch (error) {

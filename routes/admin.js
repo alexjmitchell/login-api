@@ -4,13 +4,9 @@ const router = Router();
 const AdminController = require('../controllers/admin_controller');
 const { authenticateToken } = require('../middleware/auth');
 
-router.get('/login', AdminController.showLoginPage);
+router.post('/register', AdminController.registerNewUser);
 
-router.get('/register', AdminController.showRegisterPage);
-
-router.post('/register', AdminController.postToRegisterPage);
-
-router.post('/login', AdminController.postToLoginPage);
+router.post('/login', AdminController.loginExistingUser);
 
 router.get('/loggedin?', AdminController.isUserLoggedIn);
 

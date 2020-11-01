@@ -1,8 +1,8 @@
-const User = require('../models/user');
+const models = require('../models/index');
+const User = models.users;
 const ErrorController = require('../controllers/error_controller');
 const UserErrorController = require('../controllers/userError_controller');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { createToken } = require('../utils/jsonwebtoken');
 
 /**
